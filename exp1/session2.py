@@ -2,19 +2,20 @@ import os
 import sys
 import time
 
-import cv2
 from ultralytics import YOLO
 
 
-# ================= 1. 数据集路径与参数 =================
+# ================= 1. 路径与参数 =================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_IMAGE_DIR = os.path.join(BASE_DIR, "DOG.v2i.yolov8", "test", "images")
 
-WEIGHTS_PATH = os.path.join(BASE_DIR, "runs", "dog_train", "weights", "best.pt")
-FALLBACK_MODEL = "yolov8n.pt"
-LOG_TXT = os.path.join(BASE_DIR, "runs", "dog_predict_log.txt")
-PREDICT_DIR = os.path.join(BASE_DIR, "runs", "dog_predict")
+MODEL_NAME = "yolov8n.pt"
+LOG_TXT = os.path.join(BASE_DIR, "runs", "coco_dog_demo_log.txt")
+REPORT_TXT = os.path.join(BASE_DIR, "runs", "coco_dog_demo_report.txt")
+PREDICT_DIR = os.path.join(BASE_DIR, "runs", "coco_dog_demo")
 PREDICT_NAME = "predictions"
+CONF_THRESHOLD = 0.25
+IOU_THRESHOLD = 0.45
 
 
 class Tee:
@@ -31,39 +32,46 @@ class Tee:
             stream.flush()
 
 
-def predict_image(
-    model, source, output_dir, confidence_threshold=0.25, iou_threshold=0.45
-):
-    results = model.predict(
-        source=source,
-        conf=confidence_threshold,
-        iou=iou_threshold,
-        save=True,
-        project=output_dir,
-        name=PREDICT_NAME,
-        exist_ok=True,
-    )
-
-    for result in results:
-        boxes = result.boxes
-        image_name = os.path.basename(str(getattr(result, "path", source)))
-        print(f"[INFO] {image_name} 检测到 {len(boxes)} 个目标")
-
-    return results
+def get_class_id_by_name(model, class_name):
+    for class_id, name in model.names.items():
+        if str(name).lower() == class_name.lower():
+            return class_id
+    return None
 
 
-def find_trained_weights(root_dir):
-    candidates = []
-    for current_root, _, file_names in os.walk(root_dir):
-        for file_name in file_names:
-            if file_name.lower() in ("best.pt", "last.pt"):
-                candidates.append(os.path.join(current_root, file_name))
+def write_demo_report(report_path, model_name, dog_class_id, image_count, results):
+    total_detections = 0
+    images_with_dog = 0
+    max_confidence = 0.0
 
-    if not candidates:
-        return None
+    with open(report_path, "w", encoding="utf-8") as report_file:
+        report_file.write("COCO 预训练模型 dog 类别演示报告\n")
+        report_file.write(f"模型: {model_name}\n")
+        report_file.write(f"dog 类别 ID: {dog_class_id}\n")
+        report_file.write(f"测试图像数量: {image_count}\n")
+        report_file.write("每张图像的 dog 检测结果:\n")
 
-    candidates.sort(key=lambda path: os.path.getmtime(path), reverse=True)
-    return candidates[0]
+        for result in results:
+            image_name = os.path.basename(str(getattr(result, "path", "unknown")))
+            boxes = result.boxes
+            count = len(boxes)
+
+            if count > 0:
+                images_with_dog += 1
+                total_detections += count
+                if getattr(boxes, "conf", None) is not None:
+                    confidences = boxes.conf.tolist()
+                    if confidences:
+                        max_confidence = max(max_confidence, max(confidences))
+
+            report_file.write(f"- {image_name}: dog 检测数量 = {count}\n")
+
+        report_file.write("\n汇总:\n")
+        report_file.write(f"- 含 dog 的图像数量: {images_with_dog}\n")
+        report_file.write(f"- dog 总检测数量: {total_detections}\n")
+        report_file.write(f"- 最高置信度: {max_confidence:.4f}\n")
+
+    print(f"[INFO] 演示报告已保存到: {report_path}")
 
 
 if __name__ == "__main__":
@@ -78,40 +86,44 @@ if __name__ == "__main__":
         sys.stderr = Tee(original_stderr, log_file)
 
         try:
-            print("[INFO] 正在加载检测模型...")
-            trained_weights = find_trained_weights(os.path.join(BASE_DIR, "runs"))
-            if trained_weights is not None:
-                print(f"[INFO] 使用训练好的权重: {trained_weights}")
-                model = YOLO(trained_weights)
-            else:
-                print("[WARN] 没有找到任何训练权重 best.pt/last.pt。")
-                print(
-                    "[WARN] 这通常表示你还没有执行过训练脚本，data.yaml 只是数据配置，不会自动生成权重。"
-                )
-                print(f"[WARN] 改用基础模型: {FALLBACK_MODEL}")
-                model = YOLO(FALLBACK_MODEL)
+            print("[INFO] 正在加载 COCO 预训练模型...")
+            model = YOLO(MODEL_NAME)
+
+            dog_class_id = get_class_id_by_name(model, "dog")
+            if dog_class_id is None:
+                raise RuntimeError("在当前 COCO 模型中没有找到 dog 类别。")
 
             test_images = [
                 file_name
                 for file_name in os.listdir(TEST_IMAGE_DIR)
                 if file_name.lower().endswith((".jpg", ".jpeg", ".png"))
             ]
-
             if not test_images:
                 raise FileNotFoundError(f"测试集图片为空: {TEST_IMAGE_DIR}")
 
-            print(f"[INFO] 共找到 {len(test_images)} 张测试图像，开始批量预测...")
-            results = predict_image(model, TEST_IMAGE_DIR, PREDICT_DIR)
+            print(f"[INFO] 找到 dog 类别 ID: {dog_class_id}")
+            print(f"[INFO] 共找到 {len(test_images)} 张测试图像，开始批量演示预测...")
 
-            if results:
-                print(
-                    f"[INFO] 预测结果已保存到: {os.path.join(PREDICT_DIR, PREDICT_NAME)}"
-                )
-                first_annotated_img = results[0].plot()
-                if first_annotated_img is not None:
-                    cv2.imshow("YOLO Dog Detection", first_annotated_img)
-                    cv2.waitKey(0)
-                    cv2.destroyAllWindows()
+            results = model.predict(
+                source=TEST_IMAGE_DIR,
+                conf=CONF_THRESHOLD,
+                iou=IOU_THRESHOLD,
+                classes=[dog_class_id],
+                save=True,
+                project=PREDICT_DIR,
+                name=PREDICT_NAME,
+                exist_ok=True,
+            )
+
+            write_demo_report(
+                REPORT_TXT,
+                MODEL_NAME,
+                dog_class_id,
+                len(test_images),
+                results,
+            )
+            print("[INFO] 已完成 COCO dog 类别演示预测")
+            print(f"[INFO] 预测结果目录: {os.path.join(PREDICT_DIR, PREDICT_NAME)}")
 
         finally:
             sys.stdout = original_stdout
