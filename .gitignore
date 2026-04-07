@@ -5,6 +5,7 @@ MIT/
 pedestrian/
 neg/
 pos/
+DOG.v2i.yolov8
 *.tar.gz
 *.zip
 *.rar
