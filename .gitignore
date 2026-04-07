@@ -1,0 +1,47 @@
+# 数据集文件夹（非常重要！不要把数据集传到Git）
+data/
+dataset/
+MIT/
+pedestrian/
+neg/
+pos/
+*.tar.gz
+*.zip
+*.rar
+*.ppm
+*.jpg
+*.png
+*.bmp
+
+# Python 编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 虚拟环境
+venv/
+env/
+.venv/
+.env/
+
+# 训练输出
+weights/
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+*.onnx
+runs/
+
+# 日志、缓存
+logs/
+*.log
+.DS_Store
+*.tmp
+
+# IDE 配置
+.idea/
+.vscode/
+*.swp
+*.sublime-*
