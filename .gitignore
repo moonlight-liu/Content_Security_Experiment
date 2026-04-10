@@ -11,8 +11,8 @@ DOG.v2i.yolov8
 *.rar
 *.ppm
 *.jpg
-*.png
 *.bmp
+*.wav
 
 # Python 编译文件
 __pycache__/
@@ -46,3 +46,5 @@ logs/
 .vscode/
 *.swp
 *.sublime-*
+
+UrbanSound8K/
