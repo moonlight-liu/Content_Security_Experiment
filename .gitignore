@@ -13,6 +13,11 @@ DOG.v2i.yolov8
 *.jpg
 *.bmp
 *.wav
+*.cfg
+*.npy
+*.names
+*.weights
+
 
 # Python 编译文件
 __pycache__/
