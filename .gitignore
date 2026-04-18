@@ -17,7 +17,7 @@ DOG.v2i.yolov8
 *.npy
 *.names
 *.weights
-
+MNIST/
 
 # Python 编译文件
 __pycache__/
