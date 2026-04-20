@@ -36,7 +36,7 @@ def fgsm_attack(image, epsilon, data_grad):
 
 def adv_train_model():
     batch_size = 64
-    epochs = 20
+    epochs = 10
     learning_rate = 0.01
     epsilon = 0.3  # 训练时使用的对抗扰动强度
 
