@@ -2,7 +2,7 @@ import os
 
 # 【重要提示】如果你在运行代码时遇到网络连接错误（huggingface.co无法访问），
 # 请将下面这一行的注释符号（#）去掉，使用国内镜像源下载模型：
-os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+# os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 from transformers import pipeline
 
 print("正在加载GPT-2模型，如果是第一次运行，需要几分钟时间下载模型文件...")
