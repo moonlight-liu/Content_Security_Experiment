@@ -1,6 +1,7 @@
 # 作业8：Deepfake 假视频制作
 
-详细代码可见代码附件，或看我的github仓库：
+详细代码可见代码附件，或看我的github仓库：https://github.com/moonlight-liu/Content_Security_Experiment
+
 ## 制作流程
 
 ### 1. 环境配置
