@@ -18,6 +18,10 @@ DOG.v2i.yolov8
 *.names
 *.weights
 MNIST/
+*.mp*
+*.avi
+*.pt
+*.pth
 
 # Python 编译文件
 __pycache__/

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ffmpeg -y -i \"g:/Content_Security_Experiment/homework8/lipsync_out_v2.avi\" -c:v libx264 -preset slow -crf 23 -c:a aac -b:a 64k -ac 1 \"g:/Content_Security_Experiment/homework8/final_result.mp4\")"
+    ]
+  }
+}
