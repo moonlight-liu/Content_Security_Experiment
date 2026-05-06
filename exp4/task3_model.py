@@ -20,6 +20,7 @@ def attn(x, scope, n_state, *, past, hparams):
 
         return a, present
 
+
 """
 【分析与作用总结】（写报告时用到）
 1. 核心作用： 该函数实现了 GPT-2 的掩码多头自注意力机制（Masked Multi-Head Self-Attention）。正如幻灯片所说，它的作用是“将有限的注意力集中在重点信息上”，在生成每一个词时，决定应该分配多少注意力给前面的每一个词，从而理解上下文语境。
