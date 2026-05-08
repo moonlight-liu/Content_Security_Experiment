@@ -22,6 +22,7 @@ MNIST/
 *.avi
 *.pt
 *.pth
+*.dat
 
 # Python 编译文件
 __pycache__/
